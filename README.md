@@ -193,4 +193,66 @@ function temp(name:string|number):never {
 - if 안에서는 string형의 name 반환합니다.
 - else if 안에서는 number형의 name 반환합니다.
 - else 안에서는 never형의 name 반환합니다.
-⇒ 즉, 제대로 인자가 전달되었다면 else로 올 수 없습니다.
+- ⇒ 즉, 제대로 인자가 전달되었다면 else로 올 수 없습니다.
+
+
+
+### Function
+#### Call Signatures
+프로퍼티로 호출 가능한 것을 설명하려면 객체 타입에 Call Signature을 작성할 수 있습니다. Call(=Function) Signature란 함수의 매개변수와 반환 값의 타입을 모두 type으로 미리 선언하는 것을 말하며 Call Signatures는 다음과 같이 함수의 매개 변수(parameter)와 반환 타입을 지정합니다.
+```javascript
+type Add = {
+  (a: number, b: number): number;
+}
+
+const add: Add = (a, b) => a + b
+```
+
+##### 주의
+```javascript
+const add:Add = (a,b) => a+b
+// 위의 Arrow함수를 일반 함수로 풀면 다음과 같게 됩니다.
+function add(a, b) {
+  return (a+b)
+}
+
+const add:Add = (a,b) => {a+b}
+// 위의 Arrow함수를 일반 함수로 풀면 다음과 같게 됩니다.
+function add(a, b) {
+  a+b;
+}
+
+// 애로우함수에서 {}를 사용하게 되면 그 안의 값은 반환이 아니라 함수 내부 내용으로 처리되기에 반환값이 없는 void로 처리됩니다.
+// 이에 따라 위에서 미리 선안한 Add자료형의 반환값은 number라고정해놓은 내용과 충돌하기에 에러가 발생합니다.
+```
+
+```javascript
+type PizzaFunction = {
+  pizza: string;
+  (args: number): boolean;
+};
+
+function hello(fn: PizzaFunction) {
+  console.log(fn.pizza, fn(6));
+}
+```
+<a href="https://www.typescriptlang.org/docs/handbook/2/functions.html#call-signatures" target="_blank">call-signatures</a>
+
+
+#### Overloads
+하나의 함수가 복수의 Call Signature를 가질 때 발생합니다.  동일한 이름에 매개 변수와 매개 변수 타입 또는 리턴 타입이 다른 여러 버전의 함수를 만드는 것을 말합니다. TypeScript에서는 오버로드 signatures을 작성하여 "다양한 방식으로 호출할 수 있는 함수"를 지정할 수 있습니다.
+```javascript
+type Add={
+  (a:number,b:number):number;
+  (a:number,b:number,c:number):number;
+}
+
+const add:Add=(a, b, c?:number) => {
+  if (c) return a + b + c;
+  return a + b;
+}
+
+add(1,2)
+add(1,2,3)
+```
+<a href="https://www.typescriptlang.org/docs/handbook/2/functions.html#function-overloads" target="_blank">overloads</a>
