@@ -256,3 +256,155 @@ add(1,2)
 add(1,2,3)
 ```
 <a href="https://www.typescriptlang.org/docs/handbook/2/functions.html#function-overloads" target="_blank">overloads</a>
+
+#### polymorphism(다형성)
+다형성이란, 여러 타입을 받아들임으로써 여러 형태를 가지는 것을 의미합니다. 인자들과 반환값에 대하여 형태(타입)에 따라 그에 상응하는 형태(타입)를 갖을 수 있습니다.
+
+타입스크립트에서 다형성을 가지기 위해선 제너릭을 사용합니다.
+제네릭은 C#이나 Java와 같은 언어에서 재사용 가능한 컴포넌트를 만들기 위해 사용하는 기법으로 단일 타입이 아닌 다양한 타입에서 작동할 수 있는 컴포넌트를 생성할 수 있습니다.(구체적인 타입을 지정하지 않고 다양한 인수와 리턴 값에 대한 타입을 처리할 수 있습니다.) 타입스크립트에서 제네릭을 통해 인터페이스, 함수 등의 재사용성을 높일 수 있습니다.
+제네릭은 선언 시점이 아니라 생성 시점에 타입을 명시하여 하나의 타입만이 아닌 다양한 타입을 사용할 수 있도록 하는 기법이라 정리할 수 있습니다.
+
+
+
+##### 재너릭을 사용하지 않았을 때
+```javascript
+// 모든 타입을 다 적어주어야 함
+type SuperPrint = {
+  (arr: number[]): void,
+  (arr: string[]): void,
+  (arr: boolean[]): void,
+  (arr: (number|string|boolean)[]): void
+}
+
+const superPrint: SuperPrint = (arr) => {
+  arr.forEach(e => console.log(e));
+}
+
+superPrint([1, 2, 3])
+superPrint(["a", "b", "c"])
+superPrint([true, false, true])
+superPrint([1, "b", true])
+```
+위와 같이 다양한 경우를 커버하는 함수를 작성할 때, 모든 조합의 Call Signature를 concrete type으로 적어주는 일은 번거롭습니다.
+
+##### 재너릭을 사용할 때
+```javascript
+type SuperPrint = {
+  (arr: T[]): T
+}
+
+const superPrint: SuperPrint = (arr) => arr[0]
+
+// (arr: number[]) => number
+superPrint([1, 2, 3])
+
+// (arr: string[]) => string
+superPrint(["a", "b", "c"])
+
+// (arr: boolean[]) => boolean
+superPrint([true, false, true])
+
+// (arr: (string | number | boolean)[]) => string | number | boolean
+superPrint([1, "b", true])
+```
+위의 코드처럼 type에 Generic을 할당하면 호출된 값으로 concrete type을 가지는 Call Signature를 역으로 보여주는 다형성(Polymorphism)을 가지게 됩니다
+
+##### 함수에서 제너릭을 사용할 때
+```javascript
+function identity< Type >(arg: Type): Type {
+  return arg;
+}
+
+// 제네릭 화살표 함수 (tsx기준)
+const identity=< Type extends {} >(arg: Type):Type => {
+  return arg;
+}
+
+let output = identity< string >("myString"); // 첫 번째 방법
+let output = identity("myString"); // 두 번째 방법
+// 두 번째 방법은 type argument inference(타입 인수 유추)를 사용합니다. 즉, 컴파일러가 전달하는 인수 유형에 따라 자동으로 Type 값을 설정하기를 원합니다.
+```
+
+##### any를 넣는 것과 Generic의 차이는 무엇일까요?
+```javascript
+// Any
+type SuperPrint = {
+  (arr: any[]): any
+}
+
+const superPrint: SuperPrint = (arr) => arr[0]
+
+let a = superPrint([1, "b", true]);
+
+// pass
+a.toUpperCase(); // any를 사용하면 위와 같은 경우에도 에러가 발생하지 않습니다.
+
+// Generics
+type SuperPrint = {
+  (arr: T[]): T
+}
+
+const superPrint: SuperPrint = (arr) => arr[0]
+
+let a = superPrint([1, "b", true]);
+
+// error
+a.toUpperCase();
+// Generic의 경우 에러가 발생해 보호받을 수 있다
+// 이유는 Call Signature를 concrete type으로 하나씩 추가하는 형태이기 때문입니다.
+
+type SuperPrint = {
+  (arr: T[], x: M): T
+}
+
+const superPrint: SuperPrint = (arr, x) => arr[0]
+
+let a = superPrint([1, "b", true], "hi");
+
+// 위와 같이 복수의 Generic을 선언해 사용할 수도 있습니다
+```
+'any'를 사용하는 것은 어떤 타입이든 받을 수 있다는 점에서 'generics'과 같지만 함수를 반환하는데 있어 'any'는 받았던 인수들의 타입을 활용하지 못합니다.
+정리하면 any와의 차이점은 해당 타입에 대한 정보를 잃지 않는다는 차이점으로 any는 any로서 밖에 알 수 없지만 generics는 타입 정보를 알 수 있습니다.
+
+<a href="https://www.typescriptlang.org/docs/handbook/2/generics.html" target="_blank">Generics</a>
+
+
+### classes And Interfaces
+#### classes
+##### 추상(abstract) 클래스
+추상 클래스는 오직 다른 클래스가 상속받을 수 있는 클래스로 직접 새로운 인스턴스를 만들 수는 없습니다.
+
+```javascript
+abstract class User {
+  constructor(
+    private firstname:string,
+    private lastname:string,
+    public nickname:string
+  ){
+    abstract getNickname():void
+  }
+}
+
+class Player extends User {
+// 추상 메서드는 추상 클래스를 상속받는 클래스들이 반드시 구현(implement)해야하는 메서드입니다.
+  getNickname(){
+    console.log(this.nickname)
+  }
+}
+```
+##### 접근 가능한 위치 정리
+| 구분　     | 선언한 클래스 내 | 상속받은 클래스 내 | 인스턴스 |
+| :--------- | :--------------: | :-----:            | -----:  |
+| private    |    ⭕            |  ❌                |  ❌   |
+| protected  |    ⭕            |  ⭕                 |  ❌   |
+| public     |    ⭕            |  ⭕                 |  ⭕    |
+
+public: 모든 클래스에서 접근 가능
+private: 해당 클래스 내에서만 접근 가능 (자식 클래스에서도 접근 불가)
+protected: 해당 클래스와 자식 클래스에서 접근 가능
+
+<a href="https://www.typescriptlang.org/docs/handbook/2/classes.html" target="_blank">classes</a>
+<a href="" target="_blank"></a>
+<a href="" target="_blank"></a>
+<a href="" target="_blank"></a>
+<a href="" target="_blank"></a>
